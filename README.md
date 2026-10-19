@@ -1,1 +1,644 @@
-# json-to-csv-converter
+<!DOCTYPE html>
+<html lang="en" class="h-full dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON to CSV Converter - Free Online Utility</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+  <script>
+    // Initialize theme based on preference or localStorage immediately to prevent flash
+    if (localStorage.getItem('theme') === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          <i class="fa-solid fa-file-csv text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">JSON to CSV Converter</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Convert JSON data to CSV instantly in your browser</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Dark / Light Mode Toggle Button -->
+        <button id="themeToggleBtn" title="Toggle Dark/Light Mode" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition flex items-center justify-center">
+          <i id="themeToggleIcon" class="fa-solid fa-moon text-sm"></i>
+        </button>
+        <button id="loadSampleBtn" class="text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-lightbulb text-amber-500 dark:text-amber-400"></i>
+          <span>Load Sample</span>
+        </button>
+        <button id="clearAllBtn" class="text-xs sm:text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-md transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Clear</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner / Toast Message -->
+  <div id="toast" class="fixed top-20 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm w-full bg-white dark:bg-slate-800 border rounded-lg shadow-xl p-4 flex items-start space-x-3 hidden">
+    <div id="toastIcon" class="flex-shrink-0 mt-0.5"></div>
+    <div class="flex-1">
+      <h3 id="toastTitle" class="text-sm font-medium text-slate-900 dark:text-white"></h3>
+      <p id="toastMessage" class="text-xs text-slate-600 dark:text-slate-300 mt-1"></p>
+    </div>
+    <button onclick="dismissToast()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+
+    <!-- Config Toolbar -->
+    <div class="bg-white/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Delimiter Selection -->
+        <div class="flex items-center space-x-2">
+          <label for="delimiterSelect" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Delimiter:</label>
+          <select id="delimiterSelect" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs sm:text-sm rounded-lg p-2 focus:ring-emerald-500 focus:border-emerald-500">
+            <option value=",">Comma (,)</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="&#9;">Tab (\t)</option>
+            <option value="|">Pipe (|)</option>
+          </select>
+        </div>
+
+        <!-- Option Checkboxes -->
+        <div class="flex items-center space-x-4">
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="flattenJsonToggle" checked class="sr-only peer">
+            <div class="relative w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            <span class="ml-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Flatten Nested JSON</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+        <button id="copyBtn" class="flex-1 sm:flex-initial bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs sm:text-sm px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-copy"></i>
+          <span>Copy CSV</span>
+        </button>
+        <button id="downloadBtn" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-lg shadow-lg shadow-emerald-900/20 transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-download"></i>
+          <span>Download CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dual Workspace Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[450px]">
+      
+      <!-- Input Column: Drag-and-Drop & JSON Editor -->
+      <div class="flex flex-col bg-white/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+        <div class="bg-slate-100/80 dark:bg-slate-800/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <span class="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-code text-emerald-600 dark:text-emerald-400"></i> JSON Input
+          </span>
+          <span id="jsonStats" class="text-xs text-slate-500 dark:text-slate-400">0 KB</span>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div id="dropZone" class="p-4 border-2 border-dashed border-slate-300 dark:border-slate-700 m-4 rounded-lg text-center cursor-pointer hover:border-emerald-500/50 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition bg-slate-50 dark:bg-slate-900/30">
+          <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 dark:text-slate-400 mb-2"></i>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Drag & Drop a JSON file here, or <span class="text-emerald-600 dark:text-emerald-400 underline">browse</span></p>
+          <input type="file" id="fileInput" accept=".json,application/json" class="hidden">
+        </div>
+
+        <!-- Raw JSON Textarea -->
+        <div class="flex-1 px-4 pb-4 flex flex-col">
+          <textarea id="jsonInput" placeholder="Paste your JSON array or object here..." class="w-full h-full min-h-[250px] p-3 bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700/80 rounded-lg text-slate-800 dark:text-slate-200 font-mono text-xs sm:text-sm focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+          <div id="errorMessage" class="hidden mt-2 p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-lg flex items-center gap-2">
+            <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
+            <span id="errorText" class="truncate">Invalid JSON format</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Column: Live Table Preview & Generated CSV -->
+      <div class="flex flex-col bg-white/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+        <div class="bg-slate-100/80 dark:bg-slate-800/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <div class="flex space-x-2">
+            <button id="viewTableBtn" class="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 text-white transition">Table Preview</button>
+            <button id="viewRawBtn" class="px-3 py-1 text-xs font-semibold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition">Raw CSV</button>
+          </div>
+          <span id="csvStats" class="text-xs text-slate-500 dark:text-slate-400">0 rows</span>
+        </div>
+
+        <!-- Output Views Container -->
+        <div class="flex-1 p-4 relative overflow-auto min-h-[250px]">
+          
+          <!-- Table View Mode -->
+          <div id="tableView" class="w-full h-full overflow-auto rounded-lg border border-slate-200 dark:border-slate-700/80">
+            <table class="w-full text-left text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+              <thead id="tableHeader" class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 sticky top-0 border-b border-slate-200 dark:border-slate-700 uppercase text-[11px] tracking-wider">
+                <tr><th class="p-3 text-slate-400 dark:text-slate-500 italic">No data to display</th></tr>
+              </thead>
+              <tbody id="tableBody" class="divide-y divide-slate-200 dark:divide-slate-800/60 bg-white dark:bg-slate-900/50">
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Raw Text View Mode (Hidden by Default) -->
+          <textarea id="rawCsvOutput" readonly class="hidden w-full h-full min-h-[250px] p-3 bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700/80 rounded-lg text-emerald-600 dark:text-emerald-400 font-mono text-xs sm:text-sm focus:outline-none resize-none" placeholder="CSV output will appear here..."></textarea>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer / Ad Banner Placeholder for Monetization -->
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 py-4 px-4 sm:px-6 lg:px-8 mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-500 gap-4">
+      <div>
+        <span>&copy; <span id="year"></span> JSON to CSV Utility. 100% Client-side Processing.</span>
+      </div>
+      <!-- Adsense or Banner Slot Placeholder -->
+      <div class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-4 py-1 text-[11px] text-slate-600 dark:text-slate-400 flex items-center space-x-2">
+        <i class="fa-solid fa-shield-halved text-emerald-600 dark:text-emerald-500"></i>
+        <span>Data privacy safe: Files are never uploaded to any server.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Theme Toggle Functionality
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+    function updateThemeIcon() {
+      if (document.documentElement.classList.contains('dark')) {
+        themeToggleIcon.className = 'fa-solid fa-sun text-amber-400 text-sm';
+        themeToggleBtn.setAttribute('title', 'Switch to Light Mode');
+      } else {
+        themeToggleIcon.className = 'fa-solid fa-moon text-slate-600 text-sm';
+        themeToggleBtn.setAttribute('title', 'Switch to Dark Mode');
+      }
+    }
+
+    // Set initial icon on load
+    updateThemeIcon();
+
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      updateThemeIcon();
+    });
+
+    // Global State
+    let parsedCsvData = '';
+    let parsedHeaders = [];
+    let parsedRows = [];
+
+    // DOM Elements
+    const jsonInput = document.getElementById('jsonInput');
+    const rawCsvOutput = document.getElementById('rawCsvOutput');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const delimiterSelect = document.getElementById('delimiterSelect');
+    const flattenJsonToggle = document.getElementById('flattenJsonToggle');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const tableView = document.getElementById('tableView');
+    const tableHeader = document.getElementById('tableHeader');
+    const tableBody = document.getElementById('tableBody');
+    const viewTableBtn = document.getElementById('viewTableBtn');
+    const viewRawBtn = document.getElementById('viewRawBtn');
+    const jsonStats = document.getElementById('jsonStats');
+    const csvStats = document.getElementById('csvStats');
+
+    // Footer Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Sample JSON Data
+    const sampleJSON = [
+      {
+        "id": 101,
+        "name": "Sarah Connor",
+        "role": "Engineer",
+        "email": "sarah@example.com",
+        "address": {
+          "city": "Los Angeles",
+          "country": "USA"
+        },
+        "active": true
+      },
+      {
+        "id": 102,
+        "name": "John Doe",
+        "role": "Designer",
+        "email": "john@example.com",
+        "address": {
+          "city": "New York",
+          "country": "USA"
+        },
+        "active": false
+      },
+      {
+        "id": 103,
+        "name": "Amina Khan",
+        "role": "Data Analyst",
+        "email": "amina@example.com",
+        "address": {
+          "city": "London",
+          "country": "UK"
+        },
+        "active": true
+      }
+    ];
+
+    // Helper: Flatten Object Recursively
+    function flattenObject(obj, prefix = '') {
+      return Object.keys(obj).reduce((acc, k) => {
+        const pre = prefix.length ? prefix + '.' : '';
+        if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
+          Object.assign(acc, flattenObject(obj[k], pre + k));
+        } else {
+          acc[pre + k] = obj[k];
+        }
+        return acc;
+      }, {});
+    }
+
+    // Main Conversion Function
+    function convertJsonToCsv() {
+      const rawText = jsonInput.value.trim();
+      
+      // Reset State if empty
+      if (!rawText) {
+        hideError();
+        clearOutputs();
+        updateStats(0, 0);
+        return;
+      }
+
+      try {
+        let json = JSON.parse(rawText);
+        hideError();
+
+        // Standardize input: If user inputs a single object, wrap in array
+        if (!Array.isArray(json)) {
+          if (typeof json === 'object' && json !== null) {
+            json = [json];
+          } else {
+            showError('Invalid JSON format: Content must be an array or an object.');
+            clearOutputs();
+            return;
+          }
+        }
+
+        if (json.length === 0) {
+          showError('JSON array is empty.');
+          clearOutputs();
+          return;
+        }
+
+        // Handle Flatten Option
+        const shouldFlatten = flattenJsonToggle.checked;
+        const processedArray = json.map(item => {
+          if (typeof item !== 'object' || item === null) return { value: item };
+          return shouldFlatten ? flattenObject(item) : item;
+        });
+
+        // Collect all unique keys (headers) across all objects
+        const headersSet = new Set();
+        processedArray.forEach(item => {
+          Object.keys(item).forEach(key => headersSet.add(key));
+        });
+        
+        parsedHeaders = Array.from(headersSet);
+        const delimiter = delimiterSelect.value;
+
+        // Build CSV Header Row
+        const csvRows = [];
+        const escapedHeaders = parsedHeaders.map(header => escapeCsvField(header, delimiter));
+        csvRows.push(escapedHeaders.join(delimiter));
+
+        // Build Data Rows
+        parsedRows = processedArray.map(item => {
+          return parsedHeaders.map(header => {
+            const val = item[header];
+            let cellValue = '';
+            
+            if (val !== undefined && val !== null) {
+              if (typeof val === 'object') {
+                cellValue = JSON.stringify(val);
+              } else {
+                cellValue = String(val);
+              }
+            }
+            return escapeCsvField(cellValue, delimiter);
+          });
+        });
+
+        parsedRows.forEach(row => csvRows.push(row.join(delimiter)));
+        parsedCsvData = csvRows.join('\n');
+
+        // Update Outputs
+        rawCsvOutput.value = parsedCsvData;
+        renderTablePreview(parsedHeaders, parsedRows);
+        
+        // Update Stats
+        const bytes = new Blob([rawText]).size;
+        updateStats(bytes, parsedRows.length);
+
+      } catch (err) {
+        showError(`JSON Parse Error: ${err.message}`);
+        clearOutputs();
+      }
+    }
+
+    // Escape Special Characters for CSV
+    function escapeCsvField(field, delimiter) {
+      if (field === null || field === undefined) return '""';
+      let stringVal = String(field);
+      // If field contains quote, delimiter or newline, surround with quotes and escape inner quotes
+      if (stringVal.includes('"') || stringVal.includes(delimiter) || stringVal.includes('\n') || stringVal.includes('\r')) {
+        stringVal = stringVal.replace(/"/g, '""');
+        return `"${stringVal}"`;
+      }
+      return stringVal;
+    }
+
+    // Render Preview Table
+    function renderTablePreview(headers, rows) {
+      // Clear Table
+      tableHeader.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      if (headers.length === 0) {
+        tableHeader.innerHTML = '<tr><th class="p-3 text-slate-400 dark:text-slate-500 italic">No headers found</th></tr>';
+        return;
+      }
+
+      // Render Header Row
+      const trHead = document.createElement('tr');
+      headers.forEach(headerText => {
+        const th = document.createElement('th');
+        th.className = 'p-3 border-b border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap';
+        th.textContent = headerText;
+        trHead.appendChild(th);
+      });
+      tableHeader.appendChild(trHead);
+
+      // Render First 100 Rows for Performance
+      const displayRows = rows.slice(0, 100);
+      displayRows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition';
+        row.forEach(cell => {
+          const td = document.createElement('td');
+          td.className = 'p-3 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-nowrap max-w-xs truncate';
+          td.textContent = cell.startsWith('"') && cell.endsWith('"') ? cell.slice(1, -1).replace(/""/g, '"') : cell;
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+
+      if (rows.length > 100) {
+        const trMore = document.createElement('tr');
+        trMore.innerHTML = `<td colspan="${headers.length}" class="p-3 text-center text-xs text-slate-500 bg-slate-50 dark:bg-slate-900/80">Showing first 100 rows out of ${rows.length}...</td>`;
+        tableBody.appendChild(trMore);
+      }
+    }
+
+    // Helper UI Updates
+    function clearOutputs() {
+      parsedCsvData = '';
+      parsedHeaders = [];
+      parsedRows = [];
+      rawCsvOutput.value = '';
+      tableHeader.innerHTML = '<tr><th class="p-3 text-slate-400 dark:text-slate-500 italic">No data to display</th></tr>';
+      tableBody.innerHTML = '';
+      updateStats(0, 0);
+    }
+
+    function updateStats(jsonBytes, rowCount) {
+      jsonStats.textContent = jsonBytes > 0 ? `${(jsonBytes / 1024).toFixed(2)} KB` : '0 KB';
+      csvStats.textContent = `${rowCount} rows`;
+    }
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorMessage.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorMessage.classList.add('hidden');
+    }
+
+    // Toast Notifications
+    function showToast(title, message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastTitle = document.getElementById('toastTitle');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+
+      if (type === 'success') {
+        toastIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-lg"></i>';
+        toast.className = 'fixed top-20 right-5 z-50 transition-transform duration-300 ease-in-out max-w-sm w-full bg-white dark:bg-slate-800 border border-emerald-500/30 rounded-lg shadow-xl p-4 flex items-start space-x-3';
+      } else {
+        toastIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-600 dark:text-rose-400 text-lg"></i>';
+        toast.className = 'fixed top-20 right-5 z-50 transition-transform duration-300 ease-in-out max-w-sm w-full bg-white dark:bg-slate-800 border border-rose-500/30 rounded-lg shadow-xl p-4 flex items-start space-x-3';
+      }
+
+      toast.classList.remove('hidden', 'translate-x-full');
+      
+      setTimeout(() => {
+        dismissToast();
+      }, 3500);
+    }
+
+    function dismissToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('translate-x-full');
+      setTimeout(() => toast.classList.add('hidden'), 300);
+    }
+
+    // Event Listeners
+    jsonInput.addEventListener('input', convertJsonToCsv);
+    delimiterSelect.addEventListener('change', convertJsonToCsv);
+    flattenJsonToggle.addEventListener('change', convertJsonToCsv);
+
+    // View Switching
+    viewTableBtn.addEventListener('click', () => {
+      tableView.classList.remove('hidden');
+      rawCsvOutput.classList.add('hidden');
+      viewTableBtn.className = 'px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 text-white transition';
+      viewRawBtn.className = 'px-3 py-1 text-xs font-semibold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition';
+    });
+
+    viewRawBtn.addEventListener('click', () => {
+      rawCsvOutput.classList.remove('hidden');
+      tableView.classList.add('hidden');
+      viewRawBtn.className = 'px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 text-white transition';
+      viewTableBtn.className = 'px-3 py-1 text-xs font-semibold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition';
+    });
+
+    // File Drag and Drop logic
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-emerald-500', 'bg-slate-100', 'dark:bg-slate-800/80');
+    });
+
+    ['dragleave', 'dragend'].forEach(type => {
+      dropZone.addEventListener(type, () => {
+        dropZone.classList.remove('border-emerald-500', 'bg-slate-100', 'dark:bg-slate-800/80');
+      });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-emerald-500', 'bg-slate-100', 'dark:bg-slate-800/80');
+      
+      if (e.dataTransfer.files.length > 0) {
+        handleFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (!file.type.includes('json') && !file.name.endsWith('.json')) {
+        showToast('Invalid File Type', 'Please select a valid .json file.', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        jsonInput.value = event.target.result;
+        convertJsonToCsv();
+        showToast('File Loaded', `Successfully imported ${file.name}`);
+      };
+      reader.readAsText(file);
+    }
+
+    // Action Buttons
+    loadSampleBtn.addEventListener('click', () => {
+      jsonInput.value = JSON.stringify(sampleJSON, null, 2);
+      convertJsonToCsv();
+      showToast('Sample Loaded', 'Loaded sample JSON dataset.');
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      jsonInput.value = '';
+      clearOutputs();
+      hideError();
+      showToast('Cleared', 'All inputs and outputs cleared.');
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (!parsedCsvData) {
+        showToast('Nothing to Copy', 'Please convert valid JSON data first.', 'error');
+        return;
+      }
+      
+      // Copy to Clipboard fallback
+      const dummyArea = document.createElement("textarea");
+      document.body.appendChild(dummyArea);
+      dummyArea.value = parsedCsvData;
+      dummyArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummyArea);
+
+      showToast('Copied!', 'CSV data copied to clipboard.');
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!parsedCsvData) {
+        showToast('Nothing to Download', 'Please convert valid JSON data first.', 'error');
+        return;
+      }
+
+      const blob = new Blob([parsedCsvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'converted_data.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast('Downloaded', 'CSV file saved successfully.');
+    });
+  </script>
+</body>
+</html>
