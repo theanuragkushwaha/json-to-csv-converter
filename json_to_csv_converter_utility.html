@@ -71,7 +71,7 @@
   </header>
 
   <!-- Notification Banner / Toast Message -->
-  <div id="toast" class="fixed top-20 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm w-full bg-slate-800 border rounded-lg shadow-xl p-4 flex items-start space-x-3 hidden">
+  <div id="toast" class="fixed top-20 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm w-full bg-slate-800 border rounded-lg shadow-xl p-4 flex items-start gap-3 hidden">
     <div id="toastIcon" class="flex-shrink-0 mt-0.5"></div>
     <div class="flex-1">
       <h3 id="toastTitle" class="text-sm font-medium text-white"></h3>
@@ -94,8 +94,18 @@
           <select id="delimiterSelect" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-lg p-2 focus:ring-emerald-500 focus:border-emerald-500">
             <option value=",">Comma (,)</option>
             <option value=";">Semicolon (;)</option>
-            <option value="&#9;">Tab (\t)</option>
+            <option value="\t">Tab (\t)</option>
             <option value="|">Pipe (|)</option>
+          </select>
+        </div>
+
+        <!-- Header order selector (new) -->
+        <div class="flex items-center space-x-2">
+          <label for="headerOrderSelect" class="text-xs sm:text-sm font-medium text-slate-300">Header order:</label>
+          <select id="headerOrderSelect" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-lg p-2">
+            <option value="first">Preserve first object's key order</option>
+            <option value="union" selected>Union (encounter order)</option>
+            <option value="alphabetical">Alphabetical</option>
           </select>
         </div>
 
@@ -103,7 +113,7 @@
         <div class="flex items-center space-x-4">
           <label class="inline-flex items-center cursor-pointer">
             <input type="checkbox" id="flattenJsonToggle" checked class="sr-only peer">
-            <div class="relative w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            <div class="relative w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-4 after:h-4 after:rounded-full"></div>
             <span class="ml-2 text-xs sm:text-sm font-medium text-slate-300">Flatten Nested JSON</span>
           </label>
         </div>
@@ -111,11 +121,11 @@
 
       <!-- Action Buttons -->
       <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
-        <button id="copyBtn" class="flex-1 sm:flex-initial bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs sm:text-sm px-4 py-2 rounded-lg border border-slate-700 transition flex items-center justify-center space-x-2">
+        <button id="copyBtn" class="flex-1 sm:flex-initial bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs sm:text-sm px-4 py-2 rounded-lg border border-slate-700 transition flex items-center space-x-2">
           <i class="fa-solid fa-copy"></i>
           <span>Copy CSV</span>
         </button>
-        <button id="downloadBtn" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-lg shadow-lg shadow-emerald-900/20 transition flex items-center justify-center space-x-2">
+        <button id="downloadBtn" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-lg shadow-lg shadow-emerald-900/20">
           <i class="fa-solid fa-download"></i>
           <span>Download CSV</span>
         </button>
@@ -143,7 +153,7 @@
 
         <!-- Raw JSON Textarea -->
         <div class="flex-1 px-4 pb-4 flex flex-col">
-          <textarea id="jsonInput" placeholder="Paste your JSON array or object here..." class="w-full h-full min-h-[250px] p-3 bg-slate-900/80 border border-slate-700/80 rounded-lg text-slate-200 font-mono text-xs sm:text-sm focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+          <textarea id="jsonInput" placeholder="Paste your JSON array or object here..." class="w-full h-full min-h-[250px] p-3 bg-slate-900/80 border border-slate-700/80 rounded-lg text-slate-200 font-mono text-xs sm:text-sm"></textarea>
           <div id="errorMessage" class="hidden mt-2 p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg flex items-center gap-2">
             <i class="fa-solid fa-circle-exclamation text-rose-400 flex-shrink-0"></i>
             <span id="errorText" class="truncate">Invalid JSON format</span>
@@ -176,7 +186,22 @@
           </div>
 
           <!-- Raw Text View Mode (Hidden by Default) -->
-          <textarea id="rawCsvOutput" readonly class="hidden w-full h-full min-h-[250px] p-3 bg-slate-900/80 border border-slate-700/80 rounded-lg text-emerald-400 font-mono text-xs sm:text-sm focus:outline-none resize-none" placeholder="CSV output will appear here..."></textarea>
+          <textarea id="rawCsvOutput" readonly class="hidden w-full h-full min-h-[250px] p-3 bg-slate-900/80 border border-slate-700/80 rounded-lg text-emerald-400 font-mono text-xs sm:text-sm focus:outline-none"></textarea>
+
+          <!-- Simple pager controls (new) -->
+          <div id="pager" class="flex items-center gap-2 mt-3">
+            <button id="prevPageBtn" class="px-2 py-1 rounded bg-slate-800 text-slate-200">Prev</button>
+            <span id="pageInfo" class="text-xs text-slate-400">Page 1</span>
+            <button id="nextPageBtn" class="px-2 py-1 rounded bg-slate-800 text-slate-200">Next</button>
+            <label class="ml-3 text-xs text-slate-400">Rows per page:
+              <select id="pageSizeSelect" class="ml-1 bg-slate-800 text-slate-200 text-xs rounded px-1">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="250">250</option>
+              </select>
+            </label>
+          </div>
+
         </div>
       </div>
 
@@ -204,6 +229,10 @@
     let parsedHeaders = [];
     let parsedRows = [];
 
+    // Pager state
+    let currentPage = 1;
+    let pageSize = 100; // default page size
+
     // DOM Elements
     const jsonInput = document.getElementById('jsonInput');
     const rawCsvOutput = document.getElementById('rawCsvOutput');
@@ -224,6 +253,7 @@
     const viewRawBtn = document.getElementById('viewRawBtn');
     const jsonStats = document.getElementById('jsonStats');
     const csvStats = document.getElementById('csvStats');
+    const headerOrderSelect = document.getElementById('headerOrderSelect');
 
     // Footer Year
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -265,14 +295,31 @@
       }
     ];
 
-    // Helper: Flatten Object Recursively
+    // Improved flattenObject that expands arrays into indexed keys
     function flattenObject(obj, prefix = '') {
       return Object.keys(obj).reduce((acc, k) => {
         const pre = prefix.length ? prefix + '.' : '';
-        if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
-          Object.assign(acc, flattenObject(obj[k], pre + k));
+        const value = obj[k];
+
+        if (value === null || value === undefined) {
+          acc[pre + k] = value;
+          return acc;
+        }
+
+        if (Array.isArray(value)) {
+          // Expand arrays: item[0], item[1], or flatten objects inside arrays with indices
+          value.forEach((el, i) => {
+            if (typeof el === 'object' && el !== null) {
+              Object.assign(acc, flattenObject(el, `${pre}${k}[${i}]`));
+            } else {
+              // primitive - store as scalar using indexed key
+              acc[`${pre}${k}[${i}]`] = el;
+            }
+          });
+        } else if (typeof value === 'object') {
+          Object.assign(acc, flattenObject(value, pre + k));
         } else {
-          acc[pre + k] = obj[k];
+          acc[pre + k] = value;
         }
         return acc;
       }, {});
@@ -321,10 +368,26 @@
         // Collect all unique keys (headers) across all objects
         const headersSet = new Set();
         processedArray.forEach(item => {
-          Object.keys(item).forEach(key => headersSet.add(key));
+          Object.keys(item).forEach(key => {
+            if (!headersSet.has(key)) headersSet.add(key);
+          });
         });
-        
-        parsedHeaders = Array.from(headersSet);
+
+        // Header ordering option (preserve first object's keys, union order, or alphabetical)
+        const headerOrder = headerOrderSelect ? headerOrderSelect.value : 'union';
+
+        if (headerOrder === 'first' && processedArray.length > 0) {
+          // preserve key order from first object, then append other keys not present in first object (encounter order)
+          const firstKeys = Object.keys(processedArray[0]);
+          const remaining = Array.from(headersSet).filter(k => !firstKeys.includes(k));
+          parsedHeaders = [...firstKeys, ...remaining];
+        } else if (headerOrder === 'alphabetical') {
+          parsedHeaders = Array.from(headersSet).sort((a, b) => a.localeCompare(b));
+        } else {
+          // union (default) - encounter order from Set
+          parsedHeaders = Array.from(headersSet);
+        }
+
         const delimiter = delimiterSelect.value;
 
         // Build CSV Header Row
@@ -354,7 +417,9 @@
 
         // Update Outputs
         rawCsvOutput.value = parsedCsvData;
-        renderTablePreview(parsedHeaders, parsedRows);
+        // reset current page to 1 whenever data changes
+        currentPage = 1;
+        renderTablePreview(parsedHeaders, parsedRows, currentPage, pageSize);
         
         // Update Stats
         const bytes = new Blob([rawText]).size;
@@ -378,9 +443,8 @@
       return stringVal;
     }
 
-    // Render Preview Table
-    function renderTablePreview(headers, rows) {
-      // Clear Table
+    // Render Preview Table (page-aware)
+    function renderTablePreview(headers, rows, page = 1, size = 100) {
       tableHeader.innerHTML = '';
       tableBody.innerHTML = '';
 
@@ -399,8 +463,9 @@
       });
       tableHeader.appendChild(trHead);
 
-      // Render First 100 Rows for Performance
-      const displayRows = rows.slice(0, 100);
+      // page window
+      const start = (page - 1) * size;
+      const displayRows = rows.slice(start, start + size);
       displayRows.forEach(row => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/50 transition';
@@ -413,11 +478,20 @@
         tableBody.appendChild(tr);
       });
 
-      if (rows.length > 100) {
+      if (rows.length > size) {
         const trMore = document.createElement('tr');
-        trMore.innerHTML = `<td colspan="${headers.length}" class="p-3 text-center text-xs text-slate-500 bg-slate-900/80">Showing first 100 rows out of ${rows.length}...</td>`;
+        trMore.innerHTML = `<td colspan="${headers.length}" class="p-3 text-center text-xs text-slate-500 bg-slate-900/80">Showing rows ${start + 1}–${Math.min(start + size, rows.length)} out of ${rows.length}</td>`;
         tableBody.appendChild(trMore);
       }
+
+      // update pager UI
+      const pageInfo = document.getElementById('pageInfo');
+      const totalPages = Math.max(1, Math.ceil(rows.length / size));
+      pageInfo.textContent = `Page ${page} of ${totalPages} (${rows.length} rows)`;
+
+      // enable/disable prev/next
+      document.getElementById('prevPageBtn').disabled = (page <= 1);
+      document.getElementById('nextPageBtn').disabled = (page >= totalPages);
     }
 
     // Helper UI Updates
@@ -429,6 +503,7 @@
       tableHeader.innerHTML = '<tr><th class="p-3 text-slate-500 italic">No data to display</th></tr>';
       tableBody.innerHTML = '';
       updateStats(0, 0);
+      currentPage = 1;
     }
 
     function updateStats(jsonBytes, rowCount) {
@@ -457,10 +532,10 @@
 
       if (type === 'success') {
         toastIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>';
-        toast.className = 'fixed top-20 right-5 z-50 transition-transform duration-300 ease-in-out max-w-sm w-full bg-slate-800 border border-emerald-500/30 rounded-lg shadow-xl p-4 flex items-start space-x-3';
+        toast.className = 'fixed top-20 right-5 z-50 transition-transform duration-300 ease-in-out max-w-sm w-full bg-slate-800 border border-emerald-500/30 rounded-lg shadow-xl p-4 flex items-start gap-3';
       } else {
         toastIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-400 text-lg"></i>';
-        toast.className = 'fixed top-20 right-5 z-50 transition-transform duration-300 ease-in-out max-w-sm w-full bg-slate-800 border border-rose-500/30 rounded-lg shadow-xl p-4 flex items-start space-x-3';
+        toast.className = 'fixed top-20 right-5 z-50 transition-transform duration-300 ease-in-out max-w-sm w-full bg-slate-800 border border-rose-500/30 rounded-lg shadow-xl p-4 flex items-start gap-3';
       }
 
       toast.classList.remove('hidden', 'translate-x-full');
@@ -480,6 +555,7 @@
     jsonInput.addEventListener('input', convertJsonToCsv);
     delimiterSelect.addEventListener('change', convertJsonToCsv);
     flattenJsonToggle.addEventListener('change', convertJsonToCsv);
+    headerOrderSelect.addEventListener('change', () => { currentPage = 1; convertJsonToCsv(); });
 
     // View Switching
     viewTableBtn.addEventListener('click', () => {
@@ -589,6 +665,26 @@
 
       showToast('Downloaded', 'CSV file saved successfully.');
     });
+
+    // Pager wiring
+    document.getElementById('prevPageBtn').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTablePreview(parsedHeaders, parsedRows, currentPage, pageSize);
+      }
+    });
+    document.getElementById('nextPageBtn').addEventListener('click', () => {
+      if ((currentPage * pageSize) < parsedRows.length) {
+        currentPage++;
+        renderTablePreview(parsedHeaders, parsedRows, currentPage, pageSize);
+      }
+    });
+    document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+      pageSize = Number(e.target.value);
+      currentPage = 1;
+      renderTablePreview(parsedHeaders, parsedRows, currentPage, pageSize);
+    });
+
   </script>
 </body>
 </html>
